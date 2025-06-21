@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Planner</title>
+  <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f3f3f3;
+      color: #24292f;
+    }
+    nav {
+      display: left;
+      justify-content: space-around;
+      background-color: #24292e;
+      padding: 10px 10px;
+    }
+    nav button {
+      background: transparent;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #0366d6;
+    }
+    .section {
+      display: none;
+      padding: 20px;
+    }
+    .section.active {
+      display: flow;
+    }
+    .task-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      max-width: 600px;
+    }
+    input[type="text"], select {
+      padding: 10px;
+      border: 1px solid #d1d5da;
+      border-radius: 6px;
+      width: -webkit-fill-available;
+    }
+    #q1{
+  background-color: #ffcfd2;
+            }
+    #q2{
+  background-color: #ffe9c6;
+            }
+    #q3{
+  background-color: #c9f4e5;
+            }
+    #q4{
+  background-color: #d7d7d7;
+            }
+    select.priority-filter {
+      width: 240px;
+      margin-bottom: 20px;
+    }
+    button.add-task {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .task-list {
+      list-style: none;
+      padding: 0;
+      max-width: 600px;
+    }
+    .task {
+      background: white;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #d1d5da;
+      border-radius: 6px;
+      justify-content: space-between;
+      align-items: center;
+      contain: content;
+      cursor: auto;
+    }
+    span{
+      width: 400px;
+      display: inline-block;
+      padding-right: 47px;
+    }
+    .board {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .column {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid #d1d5da;
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .column h2 {
+      text-align: center;
+    }
+    #todo{
+      background-color: #86c0ea;
+    }
+    #in-progress{
+      background-color: #f9d476;
+    }
+    #done{
+      background-color: #C5E3A1;
+    }
+#priority{
+  margin-right: 3px;
+}
+#checklist{
+ justify-self: center;
+}
+
+
+  </style>
+</head>
+<body>
+  <nav>
+    <button onclick="switchSection('checklist')" class="active">Checklist</button>
+    <!-- <span id = 'a'> > </span> -->
+    <button onclick="switchSection('matrix')">Prioritize</button>
+    <!-- <span id = 'a'> > </span> -->
+    <button onclick="switchSection('workflow')">Workflow</button>
+  </nav>
+
+  <div id="checklist" class="section active">
+    <div class="task-input">
+      <input type="text" id="checklist-input" placeholder="Add a new task..." />
+      <button class="add-task" onclick="addChecklistTask()">Add</button>
+    </div>
+    <ul id="checklist-tasks" class="task-list"></ul>
+  </div>
+
+  <div id="matrix" class="section">
+    <div class="board">
+      <div class="column" id="q1"><h2>1: Important & Urgent</h2></div>
+      <div class="column" id="q2"><h2>2: Important & Not Urgent</h2></div>
+      <div class="column" id="q3"><h2>3: Not Important & Urgent</h2></div>
+      <div class="column" id="q4"><h2>4: Not Important & Not Urgent</h2></div>
+    </div>
+  </div>
+
+  <div id="workflow" class="section">
+    <select id="workflow-priority" class="priority-filter" onchange="renderTasks()">
+      <option value="">-- All --</option>
+      <option value="1">1: Important & Urgent</option>
+      <option value="2">2: Important & Not Urgent</option>
+      <option value="3">3: Not Important & Urgent</option>
+      <option value="4">4: Not Important & Not Urgent</option>
+    </select>
+    <div class="board">
+      <div class="column" id="todo"><h2>To Do</h2></div>
+      <div class="column" id="in-progress"><h2>In Progress</h2></div>
+      <div class="column" id="done"><h2>Done</h2></div>
+    </div>
+  </div>
+
+  <script>
+    let tasks = [];
+
+    function switchSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+      if (id !== 'checklist') renderTasks();
+    }
+
+    function addChecklistTask() {
+      const input = document.getElementById('checklist-input');
+      const text = input.value.trim();
+      if (!text) return;
+      tasks.push({ text, priority: '1', status: 'todo' });
+      input.value = '';
+      saveTasks();
+      renderTasks();
+    }
+
+    function updateTask(index, newText) {
+      tasks[index].text = newText.trim();
+      saveTasks();
+    }
+
+    function updatePriority(index, newPriority) {
+      tasks[index].priority = newPriority;
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+    }
+
+    function makeDraggable(taskEl, index) {
+      taskEl.setAttribute('draggable', 'true');
+      taskEl.dataset.index = index;
+      taskEl.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', index);
+      });
+    }
+
+    ['todo', 'in-progress', 'done'].forEach(status => {
+      const column = document.getElementById(status);
+      column.addEventListener('dragover', e => e.preventDefault());
+      column.addEventListener('drop', e => {
+        const index = e.dataTransfer.getData('text/plain');
+        tasks[index].status = status;
+        saveTasks();
+        renderTasks();
+      });
+    });
+
+    function renderTasks() {
+      document.getElementById('checklist-tasks').innerHTML = '';
+      ['q1','q2','q3','q4'].forEach(id => document.getElementById(id).innerHTML = '<h2>' + document.getElementById(id).querySelector('h2').textContent + '</h2>');
+      ['todo','in-progress','done'].forEach(id => document.getElementById(id).innerHTML = '<h2>' + document.getElementById(id).querySelector('h2').textContent + '</h2>');
+
+      tasks.forEach((task, index) => {
+        // Checklist
+        const li = document.createElement('li');
+        li.className = 'task';
+        li.innerHTML = `
+          <span contenteditable="true" onblur="updateTask(${index}, this.textContent)">${task.text}</span>
+          <select id='priority' onchange="updatePriority(${index}, this.value)" style="width:auto;">
+            <option value="1"${task.priority==='1'?' selected':''}>Priority 1</option>
+            <option value="2"${task.priority==='2'?' selected':''}>Priority 2</option>
+            <option value="3"${task.priority==='3'?' selected':''}>Priority 3</option>
+            <option value="4"${task.priority==='4'?' selected':''}>Priority 4</option>
+          </select>
+          <button onclick="deleteTask(${index})">×</button>`;
+        document.getElementById('checklist-tasks').appendChild(li);
+
+        // Matrix
+        const mtask = document.createElement('div');
+        mtask.className = 'task';
+        mtask.textContent = task.text;
+        document.getElementById('q' + task.priority).appendChild(mtask);
+
+        // Workflow
+        const selectedPriority = document.getElementById('workflow-priority').value;
+        if (selectedPriority === '' || selectedPriority === task.priority) {
+          const wtask = document.createElement('div');
+          wtask.className = 'task';
+          wtask.textContent = task.text;
+          makeDraggable(wtask, index);
+          document.getElementById(task.status).appendChild(wtask);
+        }
+      });
+    }
+
+    function saveTasks() {
+      localStorage.setItem('task_data', JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      const data = localStorage.getItem('task_data');
+      if (data) tasks = JSON.parse(data);
+      renderTasks();
+    }
+
+    document.getElementById('checklist-input').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        addChecklistTask();
+      }
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+      saveTasks();
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>
